@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Search Books{% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/search_result_review.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1 class="text-center">iBook Space</h1>
+    <h2 class="text-center">Search for Book Reviews & Share Your Opinion Too! Let's Dig In!</h2>
+    <div class="search-form-home-page">
+        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+            <input type="text" class="search-form-control" name="book" placeholder="Title, ISBN, Author, Year..." value="{{ query }}" required>
+            <button class="search-btn" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
+<!-- Search Results -->
+{% if books %}
+    <div class="search-results-container">
+        <h3>Search Results for "{{ query }}":</h3>
+        <ul class="results-list">
+            {% for book in books %}
+            <li class="result-item">
+                <div class="book-info">
+                    <a href="{{ url_for('book', isbn=book.isbn) }}" class="book-title">{{ book.title }}</a>
+                    <span class="book-author">{{ book.author }}</span>
+                    <span class="book-isbn">ISBN: {{ book.isbn }}</span>
+                    <span class="book-year">Year: {{ book.year }}</span>
+                </div>
+            </li>            
+            {% endfor %}
+        </ul>
+    </div>
+{% elif query %}
+    <p class="no-results">No books found for "{{ query }}". Try a different search.</p>
+{% endif %}
+
+{% endblock %}

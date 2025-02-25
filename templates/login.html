@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/register_login.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="wrapper">
+    <h2>Login</h2>
+    <form action="{{ url_for('login') }}" method="POST">
+      <div class="input-box">
+        <label>Email or Username</label>
+        <input type="text" name="email_username" placeholder="Enter email or username" required>
+      </div>
+      <div class="input-box">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter password" required>
+      </div>
+      <div class="rem-forgot">
+        <input type="checkbox" name="remember_me">
+        <h3>Remember Me</h3>
+        <div class="text">
+          <h3><a href="#">Forgot Password?</a></h3>
+        </div>
+      </div>
+      <div class="input-box button">
+        <input type="submit" value="Login">
+      </div>
+      <div class="text">
+        <h3>Don't have an account? <a href="{{ url_for('register') }}">Register now</a></h3>
+      </div>
+    </form>
+  </div>
+{% endblock %}

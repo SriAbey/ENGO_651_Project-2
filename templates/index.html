@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block content %}
+  <section class="home"></section>
+  <div class="welcome-text">
+    <h1>Welcome to the iBook Space</h1>
+    {% if session.get('user_id') %}
+      <p>Hello, {{ username }}! Start exploring books now.</p>
+      <a href="{{ url_for('search') }}">
+        <button class="join-btn">Search Books</button>
+      </a>
+    {% else %}
+      <p>Discover, review, and share your thoughts on books with fellow readers.</p>
+      <a href="{{ url_for('register') }}">
+        <button class="join-btn">Join with Us</button>
+      </a>
+    {% endif %}
+  </div>
+
+  <img src="{{ url_for('static', filename='images/background.png') }}" class="bg-image" alt="Bookshelf background image">
+{% endblock %}

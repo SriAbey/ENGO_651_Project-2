@@ -1,0 +1,204 @@
+/* Google Font Link */
+@import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
+
+/* Global Styles */
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding-top: 80px;
+  background: #f0f2f5; /* Light background for better contrast */
+}
+
+/* Form Wrapper */
+.wrapper {
+  position: relative;
+  max-width: 430px;
+  width: 100%;
+  background: #fff;
+  padding: 34px;
+  border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  margin-top: 20px;
+}
+
+.wrapper h2 {
+  position: relative;
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.wrapper h2::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  height: 3px;
+  width: 28px;
+  border-radius: 12px;
+  background: #4070f4; /* Decorative underline */
+}
+
+/* Form Elements */
+.wrapper form {
+  margin-top: 30px;
+}
+
+.wrapper form .input-box {
+  height: 52px;
+  margin: 18px 0;
+  margin-bottom: 30px;
+}
+
+form .input-box input {
+  height: 100%;
+  width: 100%;
+  outline: none;
+  padding: 0 15px;
+  font-size: 17px;
+  font-weight: 400;
+  color: #333;
+  border: 1.5px solid #C7BEBE;
+  border-bottom-width: 2.5px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.input-box input:focus,
+.input-box input:valid {
+  border-color: #4070f4;
+}
+
+form .policy {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+form .policy input[type="checkbox"] {
+  margin-right: 10px; /* Add space between the checkbox and text */
+}
+
+form .policy h3 {
+  margin: 0; /* Remove default margin */
+  font-size: 14px;
+  color: #707070;
+}
+
+form h3 {
+  color: #707070;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.input-box.button input {
+  color: #fff;
+  letter-spacing: 1px;
+  border: none;
+  background: #4070f4;
+  cursor: pointer;
+}
+
+.input-box.button input:hover {
+  background: #0e4bf1;
+}
+
+form .text h3 {
+  color: #333;
+  width: 100%;
+  text-align: center;
+}
+
+form .text h3 a {
+  color: #4070f4;
+  text-decoration: none;
+}
+
+form .text h3 a:hover {
+  text-decoration: underline;
+}
+
+/* Password Hint Message */
+.password-hint {
+  font-size: 14px;
+  color: #707070;
+  margin-top: -5px; /* Space between input field and hint */
+  display: block;
+}
+
+.password-hint::before {
+  content: '*'; /* Add star mark */
+  color: #ff0000; /* Red color for the star */
+  margin-right: 5px; /* Space between star and text */
+}
+
+/* Add margin-bottom to the Password input box */
+form .input-box.password-input {
+  margin-bottom: 45px; /* Adjust the value as needed */
+}
+
+/* Remember Me and Forgot Password */
+.rem-forgot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.rem-forgot input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.rem-forgot h3 {
+  margin-left: 0px;
+  font-size: 14px;
+  color: #707070;
+}
+
+.rem-forgot .text {
+  margin-left: auto;
+}
+
+/* Error Messages */
+.error-message {
+  color: #ff0000;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 20px;
+  }
+
+  .wrapper h2 {
+    font-size: 20px;
+  }
+
+  form .input-box input {
+    font-size: 15px;
+  }
+
+  .rem-forgot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rem-forgot .text {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}

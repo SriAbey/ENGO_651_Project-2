@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/search_result_review.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="card text-center">
+    <h2 class="pt-3">Book Details</h2>
+    <div class="card-body">
+        <!-- Book Cover Image with Fallback -->
+        <div>
+            <img src="http://covers.openlibrary.org/b/isbn/{{ book.isbn }}-M.jpg" width="200px" alt="Book cover image" onerror="handleImageError(this)">
+        </div>
+        
+        <script>
+            function handleImageError(img) {
+                // Set the fallback image source
+                img.onerror = null; // Prevent infinite loop if the fallback image also fails
+                img.src = "{{ url_for('static', filename='images/placeholder.jpg') }}";
+            }
+        </script>
+        <h5 class="card-title pt-3">{{ book.title }}</h5>
+        <h6>Author: {{ book.author }}</h6>
+        <h6>Year: {{ book.year }}</h6>
+        <h6>ISBN: {{ book.isbn }}</h6>
+
+        <!-- Google Books API Data -->
+        {% if average_rating and ratings_count %}
+            <div class="google-books-data mt-4">
+                <h4>Google Books Data</h4>
+                {% if average_rating %}
+                    <p>Average Rating: {{ average_rating }}</p>
+                    {% if ratings_count is not none %}
+                        <p>Number of Ratings: {{ ratings_count }}</p>
+                    {% else %}
+                        <p>Number of Ratings: Not available</p>
+                    {% endif %}
+                {% else %}
+                    <p>No rating data available for this book.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Summarized Description -->
+        {% if summarized_description %}
+            <div class="summarized-description mt-4">
+                <h4>Summary</h4>
+                <p>{{ summarized_description }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Review Section -->
+        <div class="review-section mt-4">
+            <h4>Leave your rating and share your thoughts :)</h4>
+            {% if session.get('user_id') %}
+                <form method="POST">
+                    <div class="rating">
+                        <input type="radio" id="star5" name="rating" value="5" aria-label="5 stars">
+                        <label for="star5" title="5 stars">&#9733;</label> <!-- Unicode star -->
+                        <input type="radio" id="star4" name="rating" value="4" aria-label="4 stars">
+                        <label for="star4" title="4 stars">&#9733;</label>
+                        <input type="radio" id="star3" name="rating" value="3" checked aria-label="3 stars">
+                        <label for="star3" title="3 stars">&#9733;</label>
+                        <input type="radio" id="star2" name="rating" value="2" aria-label="2 stars">
+                        <label for="star2" title="2 stars">&#9733;</label>
+                        <input type="radio" id="star1" name="rating" value="1" aria-label="1 star">
+                        <label for="star1" title="1 star">&#9733;</label>
+                    </div>
+
+                    <textarea class="form-control mt-3" placeholder="Write a comment..." rows="2" name="comment" id="comment" required aria-label="Write a comment"></textarea>
+                    <br>
+                    <button class="btn btn-success" type="submit" aria-label="Submit review">Submit</button>
+                    <!-- Go Back Button below the Submit button -->
+                    <div class="go-back-container mt-3">
+                        <a href="{{ url_for('search') }}" class="btn btn-back">Go Back to Search</a>
+                    </div>
+                </form>
+            {% else %}
+                <p class="text-muted">Please <a href="{{ url_for('login') }}">log in</a> to leave a review.</p>
+                <!-- Go Back Button for non-logged-in users -->
+                <div class="go-back-container mt-3">
+                    <a href="{{ url_for('search') }}" class="btn btn-back">Go Back to Search</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Display Existing Reviews -->
+        <!-- Display Existing Reviews -->
+        {% if reviews %}
+        <hr>
+        <h4>Reviews:</h4>
+        {% for review in reviews %}
+            <div class="media-body">
+                <span class="text-muted pull-right">
+                    <strong class="text-success">@{{ review.username }}</strong>
+                    <small class="text-muted">rated it {{ review.rating }} out of 5 stars.</small>
+                </span>
+                <p class="comment">
+                    {{ review.comment }}
+                </p>
+            </div>
+            <div class="clearfix"></div>
+        {% endfor %}
+        {% else %}
+        <p>No reviews yet. Be the first to review this book!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

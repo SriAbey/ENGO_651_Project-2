@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title> {% block title %}iBook{% endblock %} </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout_index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/register_login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/search_result_review.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-content">
+            <div class="logo">
+                <a href="#">iBook.</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="content-container">
+        {% block content %} {% endblock %}
+    </div>
+
+</body>
+</html>

@@ -19,30 +19,26 @@
 
         <form action="{{ url_for('register') }}" method="POST">
           <div class="input-box">
-            <label>Full Name</label>
-            <input type="text" name="full_name" placeholder="Enter your name" required>
-          </div>
-
-          <div class="input-box">
-            <label>Email</label>
-            <input type="email" name="email" placeholder="Enter your email" required>
-          </div>
-
-          <div class="input-box">
+            <label>First Name</label>
+            <input type="text" name="firstName" placeholder="Enter your first name" required>
+        </div>
+        <div class="input-box">
+            <label>Last Name</label>
+            <input type="text" name="lastName" placeholder="Enter your last name" required>
+        </div>
+        <div class="input-box">
             <label>Username</label>
-            <input type="text" name="username" placeholder="Create username" required>
-          </div>
-
-          <div class="input-box password-input">
+            <input type="text" name="username_register" placeholder="Create username" required>
+        </div>
+        <div class="input-box password-input">
             <label>Password</label>
             <span class="password-hint">Password must be at least 6 characters long</span>
-            <input type="password" name="password" placeholder="Create password" required>
-          </div>
-
-          <div class="input-box">
+            <input type="password" name="password_register" placeholder="Create password" required>
+        </div>
+        <div class="input-box">
             <label>Confirm Password</label>
             <input type="password" name="confirm_password" placeholder="Re-enter password" required>
-          </div>
+        </div>
 
           <div class="policy">
             <input type="checkbox" required>

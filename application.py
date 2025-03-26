@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_session import Session
@@ -119,7 +119,7 @@ def register():
                                 message="All fields are required",
                                 type_error="registration")
 
-        if db.execute("SELECT 1 FROM users_geo WHERE username = :username",
+        if db.execute(text("SELECT 1 FROM users_geo WHERE username = :username"),
                      {"username": username}).rowcount > 0:
             return render_template("error.html",
                                 message="Username already exists",
@@ -127,8 +127,8 @@ def register():
 
         hashed_pw = generate_password_hash(password)
         db.execute(
-            """INSERT INTO users_geo (username, password, first_name, last_name)
-            VALUES (:username, :password, :first_name, :last_name)""",
+            text("""INSERT INTO users_geo (username, password, first_name, last_name)
+            VALUES (:username, :password, :first_name, :last_name)"""),
             {
                 "username": username,
                 "password": hashed_pw,

@@ -4,45 +4,62 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/register_login.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-  <div class="wrapper">
-    <h2>Registration</h2>
-    <form action="{{ url_for('register') }}" method="POST">
-      <div class="input-box">
-        <label>Full Name</label>
-        <input type="text" name="full_name" placeholder="Enter your name" required>
+  <div class="wrapper-container">
+    <div class="form-side">
+      <div class="wrapper">
+        <div class="title-icon">
+          <i class="fas fa-sign-in-alt"></i>
+          <img src="{{ url_for('static', filename='images/hp.png') }}" alt="Register Icon">
+        </div>
+        <h2>Register</h2>
+
+        <form action="{{ url_for('register') }}" method="POST">
+          <div class="input-box">
+            <label>Full Name</label>
+            <input type="text" name="full_name" placeholder="Enter your name" required>
+          </div>
+
+          <div class="input-box">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Enter your email" required>
+          </div>
+
+          <div class="input-box">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Create username" required>
+          </div>
+
+          <div class="input-box password-input">
+            <label>Password</label>
+            <span class="password-hint">Password must be at least 6 characters long</span>
+            <input type="password" name="password" placeholder="Create password" required>
+          </div>
+
+          <div class="input-box">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="Re-enter password" required>
+          </div>
+
+          <div class="policy">
+            <input type="checkbox" required>
+            <h3>I accept all terms & conditions</h3>
+          </div>
+
+          <div class="input-box button">
+            <input type="submit" value="Register Now">
+          </div>
+
+          <div class="text">
+            <h3>Already have an account? <a href="{{ url_for('login') }}">Login now</a></h3>
+          </div>
+        </form>
       </div>
-      <div class="input-box">
-        <label>Email</label>
-        <input type="email" name="email" placeholder="Enter your email" required>
-      </div>
-      <div class="input-box">
-        <label>Username</label>
-        <input type="text" name="username" placeholder="Create username" required>
-      </div>
-      <div class="input-box password-input">
-        <label>Password</label>
-        <span class="password-hint">Password must be at least 6 characters long</span>
-        <input type="password" name="password" placeholder="Create password" required>
-      </div>
-      <div class="input-box">
-        <label>Confirm Password</label>
-        <input type="password" name="confirm_password" placeholder="Re-enter password" required>
-      </div>
-      <div class="policy">
-        <input type="checkbox" required>
-        <h3>I accept all terms & conditions</h3>
-      </div>
-      <div class="input-box button">
-        <input type="submit" value="Register Now">
-      </div>
-      <div class="text">
-        <h3>Already have an account? <a href="{{ url_for('login') }}">Login now</a></h3>
-      </div>
-    </form>
-  </div>
+      <div class="image-side"></div>
+    </div>
 
   <script>
     // Client-side password validation

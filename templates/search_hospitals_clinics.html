@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <link rel="shortcut icon" href="#">
+    <title>Best path to Hospital/Clinic</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/@turf/turf@5.1.6/turf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.2/socket.io.js" integrity="sha512-YybopSVjZU0fe8TY4YDuQbP5bhwpGBE/T6eBUEZ0usM72IWBfWrgVI13qfX4V2A/W7Hdqnm7PIOYOwP9YHnICw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://npmcdn.com/leaflet-geometryutil"></script>
+
+    <link rel="stylesheet" href="../static/styles/search_hospital_clinic.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/js/polyline_encoded.js"></script>
+    {{ JSGlue.include() }}
+        
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
+      <!-- Navbar content -->
+      <a class="navbar-brand" href="#">
+        <img src="../static/images/route_icon.png" width="30" height="30" alt="">
+        <label>Best Path</label>
+      </a>
+          
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="openNav();return false;">Favorite Hospitals/Clinics</a>
+          </li>
+                    
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Shortest Path
+            </a>
+                      
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#" onclick="pathToNearest(false);return false;">To Nearest Hospital/Clinic</a>
+              <a class="dropdown-item" href="#" onclick="pathToSelected(false);return false;">To Selected Hospital/Clinic</a>
+            </div>
+          </li>
+                    
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Least Traffic Signals Path
+            </a>
+              
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#" onclick="pathToNearest(true);return false;">To Nearest Hospital/Clinic</a>
+              <a class="dropdown-item" href="#" onclick="pathToSelected(true);return false;">To Selected Hospital/Clinic</a>
+            </div>
+          </li>
+        </ul>
+                
+        <form class="form-inline my-2 my-lg-0">
+          {% if username | length<20 %}
+          <label id="userLabel">Welcome {{username}}</label>
+            
+          {% else %}
+          <label id="userLabel">Welcome {{username[:20]}}.</label>
+            
+          {% endif %}
+          <a href="{{url_for('login')}}" class="btn btn-primary active" role="button" aria-pressed="true">Logout</a>
+        </form>
+      </div>
+    </nav>
+        
+    <div id="map"></div>
+    <div id="mySidepanel" class="sidepanel">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <h5>Favorite hospitals/clinics:</h5>
+          
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="#" value="BLN" class="favoriteLink">Sheldon M. Chumir Health Centre</a>
+        </li>
+        <hr>
+
+        <li class="list-group-item">
+          <a href="#" value="EAG" class="favoriteLink">Rockyview General Hospital</a>
+        </li>
+        <hr>
+
+        <li class="list-group-item">
+          <a href="#" value="SET" class="favoriteLink">South Health Campus</a>
+        </li> 
+      </ul>
+    </div>
+
+    <div id="toggleDiv">
+      <input type="submit" id="toggleLayer" value="Satellite">
+    </div>
+
+    <div class="loader"></div>
+
+    <script type="text/javascript" src="../static/js/search_hospital_clinic.js"></script>
+  
+  </body>
+</html>

@@ -2,10 +2,10 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title> {% block title %}iBook{% endblock %} </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> {% block title %}OptiRoute{% endblock %} </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/layout_index.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/register_login.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/search_result_review.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <nav>
         <div class="nav-content">
             <div class="logo">
-                <a href="#">iBook.</a>
+                <a href="{{ url_for('home') }}">OptiRoute</a>
             </div>
             <ul class="nav-links">
                 <li><a href="{{ url_for('home') }}">Home</a></li>

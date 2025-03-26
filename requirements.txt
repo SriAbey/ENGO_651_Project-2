@@ -1,4 +1,12 @@
-Flask
-Flask-Session
+psycopg2
 psycopg2-binary
 SQLAlchemy
+Flask
+requests
+Flask_SocketIO
+Flask_JSGlue
+Flask-Session
+click
+click-plugins
+Jinja2
+gunicorn

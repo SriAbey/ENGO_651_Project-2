@@ -1,0 +1,4 @@
+2025-03-25 20:36:54,877 - WARNING - Connection attempt 1 failed: Not an executable object: 'SELECT 1'
+2025-03-25 20:36:59,960 - WARNING - Connection attempt 2 failed: Not an executable object: 'SELECT 1'
+2025-03-25 20:37:05,042 - WARNING - Connection attempt 3 failed: Not an executable object: 'SELECT 1'
+2025-03-25 20:37:05,045 - ERROR - Failed to establish database connection after retries

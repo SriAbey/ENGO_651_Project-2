@@ -5,16 +5,18 @@
 {% block content %}
   <section class="home"></section>
   <div class="welcome-text">
-    <h1>Welcome to the iBook Space</h1>
+    <h1>Welcome to the OptiRoute</h1>
+
     {% if session.get('user_id') %}
-      <p>Hello, {{ username }}! Start exploring books now.</p>
+      <p>Hello, {{ username }}! Start find nearest path now.</p>
       <a href="{{ url_for('search') }}">
-        <button class="join-btn">Search Books</button>
+        <button class="join-btn">Find Path</button>
       </a>
+
     {% else %}
-      <p>Discover, review, and share your thoughts on books with fellow readers.</p>
+      <p>Find Your Nearest Path to the Hospitals/ Clinics in Calgary</p>
       <a href="{{ url_for('register') }}">
-        <button class="join-btn">Join with Us</button>
+        <button class="join-btn">Connect with Us</button>
       </a>
     {% endif %}
   </div>

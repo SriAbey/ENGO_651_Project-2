@@ -19,12 +19,16 @@ body {
 /* Form Wrapper */
 .wrapper {
   position: relative;
-  max-width: 430px;
+  /* max-width: 430px; */
+  max-width: 100%;
   width: 100%;
-  background: #fff;
-  padding: 34px;
+  /* background: #fff; */
+  background: transparent;
+  /* padding: 34px; */
+  padding: 0;
   border-radius: 6px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2); */
+  box-shadow: none;
   margin-top: 20px;
 }
 
@@ -50,7 +54,8 @@ body {
 
 /* Form Elements */
 .wrapper form {
-  margin-top: 30px;
+  /* margin-top: 30px; */
+  margin-top: 20px;
 }
 
 .wrapper form .input-box {
@@ -176,6 +181,60 @@ form .input-box.password-input {
   font-size: 14px;
   margin-top: 10px;
   text-align: center;
+}
+
+/* Landscape layout with image */
+.wrapper-container {
+  display: flex;
+  flex-direction: row;
+  width: 800px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.image-side {
+  width: 50%;
+  background-image: url('/static/images/background.png');
+  background-size: cover;
+  background-position: center;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  order: 2; /* This moves image to right */
+}
+
+.form-side {
+  width: 50%;
+  padding: 34px;
+  order: 1; /* This keeps form on left */
+}
+
+/* Add these new styles */
+#loginImg {
+  display: block;
+  margin: 0 auto 20px;
+  width: 80px; /* Adjust size as needed */
+  height: auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  margin-top: 10px;
+}
+
+/* Icon above title styles */
+.title-icon {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.title-icon img {
+  height: 50px; /* Adjust size as needed */
+  width: auto;
 }
 
 /* Responsive Design */

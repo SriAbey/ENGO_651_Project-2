@@ -1,0 +1,43 @@
+{% extends "messages.html" %}
+
+{% block title %}
+Error
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error</h4>
+        <p>{{message}}</p>
+        
+        {% if type_error=="login" %}
+        <hr>
+        <p class="mb-0">
+            <a href="{{url_for('login')}}">Return back to the login page</a>
+    
+        </p>
+        {% elif type_error=="map" %}
+        <hr>
+        <p class="mb-0">
+            <a href="{{url_for('mapping')}}">Return back to the map page</a>
+    
+        </p>
+
+        {% elif type_error=="hospital_detail" %}
+        <hr>
+        <p class="mb-0">
+            <a href="{{url_for('hospital_clinic_details', code=code)}}">Return back to the hospital/clinic information page</a>
+    
+        </p>
+        {% elif type_error=="registration" %}
+        <hr>
+            <p class="mb-0">
+                <a href="{{url_for('register')}}">Return back to the registration page</a>
+        
+            </p>
+        
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

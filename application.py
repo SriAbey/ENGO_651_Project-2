@@ -1,261 +1,299 @@
-from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
-from flask_session import Session
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import scoped_session, sessionmaker
-from werkzeug.security import generate_password_hash, check_password_hash
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_session import Session
+from flask_socketio import SocketIO, emit
+from flask_jsglue import JSGlue
 import requests
-import google.generativeai as genai
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+from datetime import datetime
+import logging
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+jsglue = JSGlue(app)
 
-# Configure session to use filesystem
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+# Configuration
+class Config:
+    SESSION_PERMANENT = False
+    SESSION_TYPE = "filesystem"
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "postgresql://postgres:950813@localhost:5432/optiroute_db")
+    MAPBOX_ACCESS_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+app.config.from_object(Config)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+
+# Initialize extensions
 Session(app)
+socketio = SocketIO(app, logger=True, engineio_logger=True)
 
-# Set up database connection
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+# Database connection with connection pooling
+def get_database_connection():
+    return create_engine(
+        app.config["SQLALCHEMY_DATABASE_URI"],
+        pool_size=10,
+        max_overflow=20,
+        pool_recycle=3600,
+        pool_pre_ping=True
+    )
+
+engine = get_database_connection()
 db = scoped_session(sessionmaker(bind=engine))
 
-def summarize_description(description):
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(f"Summarize this text using less than 50 words: {description}")
-    return response.text
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.remove()
 
-def fetch_google_books_data(isbn):
-    response = requests.get("https://www.googleapis.com/books/v1/volumes", params={"q": f"isbn:{isbn}"})
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("totalItems", 0) > 0:
-            volume_info = data["items"][0]["volumeInfo"]
-            return {
-                "average_rating": volume_info.get("averageRating"),
-                "ratings_count": volume_info.get("ratingsCount"),
-                "description": volume_info.get("description"),
-            }
-    return None
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('error.html', 
+                         message="Page not found",
+                         type_error="generic"), 404
 
-# Home route
+@app.errorhandler(500)
+def internal_error(error):
+    db.rollback()
+    return render_template('error.html',
+                         message="Internal server error",
+                         type_error="generic"), 500
+
+# Routes
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username_login", "").strip()
+        password = request.form.get("password_login", "").strip()
+
+        if not username or not password:
+            return render_template("error.html", 
+                                message="Username and password cannot be empty",
+                                type_error="login")
+
+        user = db.execute(
+            "SELECT id, password FROM users_geo WHERE username = :username",
+            {"username": username}
+        ).fetchone()
+
+        if not user or not check_password_hash(user.password, password):
+            return render_template("error.html",
+                                message="Invalid username or password",
+                                type_error="login")
+
+        session["user_id"] = user.id
+        session["username"] = username
+        return redirect(url_for("mapping"))
+
+    return render_template("login.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        full_name = request.form.get("full_name")[:100]  # Truncate to 100 characters
-        email = request.form.get("email")[:100]  # Truncate to 100 characters
-        username = request.form.get("username")[:50]  # Truncate to 50 characters
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
+        username = request.form.get("username_register", "").strip()
+        password = request.form.get("password_register", "").strip()
+        first_name = request.form.get("firstName", "").strip()
+        last_name = request.form.get("lastName", "").strip()
 
-        # Check if passwords match
-        if password != confirm_password:
-            flash("Passwords do not match!", "danger")
-            return redirect(url_for("register"))
+        if not all([username, password, first_name, last_name]):
+            return render_template("error.html",
+                                message="All fields are required",
+                                type_error="registration")
 
-        # Hash the password
-        hashed_password = generate_password_hash(password)
+        if db.execute("SELECT 1 FROM users_geo WHERE username = :username",
+                     {"username": username}).rowcount > 0:
+            return render_template("error.html",
+                                message="Username already exists",
+                                type_error="registration")
 
-        # Check if username or email already exists
-        user_exists = db.execute(
-            text("SELECT * FROM users WHERE username = :username OR email = :email"),
-            {"username": username, "email": email}
-        ).fetchone()
-
-        if user_exists:
-            flash("Username or email already exists!", "danger")
-            return redirect(url_for("register"))
-
-        # Insert new user into the database
-        try:
-            db.execute(
-                text("""
-                    INSERT INTO users (full_name, email, username, password)
-                    VALUES (:full_name, :email, :username, :password)
-                """),
-                {"full_name": full_name, "email": email, "username": username, "password": hashed_password}
-            )
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            flash("An error occurred during registration. Please try again.", "danger")
-            return redirect(url_for("register"))
-
-        flash("Registration successful! Please log in.", "success")
-        return redirect(url_for("login"))
+        hashed_pw = generate_password_hash(password)
+        db.execute(
+            """INSERT INTO users_geo (username, password, first_name, last_name)
+            VALUES (:username, :password, :first_name, :last_name)""",
+            {
+                "username": username,
+                "password": hashed_pw,
+                "first_name": first_name,
+                "last_name": last_name
+            }
+        )
+        db.commit()
+        return render_template("success_submit.html", submit_type="register")
 
     return render_template("register.html")
 
-# Login route
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email_username = request.form.get("email_username")
-        password = request.form.get("password")
-
-        # Fetch user from the database
-        user = db.execute(
-            text("SELECT * FROM users WHERE email = :email OR username = :username"),
-            {"email": email_username, "username": email_username}
-        ).fetchone()
-
-        # Check if user exists and password is correct
-        if user and check_password_hash(user.password, password):
-            session["user_id"] = user.id
-            session["username"] = user.username
-            flash("Login successful!", "success")
-            return redirect(url_for("search"))
-        else:
-            flash("Invalid email/username or password.", "danger")
-            return redirect(url_for("login"))
-
-    return render_template("login.html")
-
-# Logout route
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("You have been logged out.", "success")
-    return redirect(url_for("home"))
-
-# Search route
-@app.route("/search", methods=["GET"])
-def search():
-    if not session.get("user_id"):
-        flash("Please log in to search for books.", "warning")
+@app.route("/map")
+def mapping():
+    if "user_id" not in session:
         return redirect(url_for("login"))
 
-    query = request.args.get("book")  # Use the correct query parameter name
-    if query:
-        # Search for books by title, author, or ISBN (partial matches)
-        books = db.execute(
-            text("""
-                SELECT * FROM books
-                WHERE title ILIKE :query OR author ILIKE :query OR isbn ILIKE :query
-            """),
-            {"query": f"%{query}%"}
-        ).fetchall()
+    return render_template("search_hospital_clinic.html", 
+                         username=session.get("username"),
+                         mapbox_token=app.config["MAPBOX_ACCESS_TOKEN"])
 
-        # Render the search results template with the books and query
-        return render_template("search.html", books=books, query=query)
-    else:
-        # If no query is provided, render the search page without results
-        return render_template("search.html")
+@app.route("/direction/<loc_1>/<loc_2>")
+def direction(loc_1, loc_2):
+    try:
+        # Validate coordinates
+        start = loc_1.split(',')
+        end = loc_2.split(',')
+        
+        if len(start) != 2 or len(end) != 2:
+            raise ValueError("Invalid coordinate format")
+            
+        # Use OSRM routing engine
+        url = f"http://router.project-osrm.org/route/v1/driving/{loc_1};{loc_2}?overview=full&steps=true&alternatives=3"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        return jsonify(response.json())
+        
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Routing request failed: {str(e)}")
+        return jsonify({"error": "Routing service unavailable"}), 503
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
-@app.route("/book/<isbn>", methods=["GET", "POST"])
-def book(isbn):
-    if request.method == "POST":
-        # Ensure the user is logged in
-        if not session.get("user_id"):
-            flash("Please log in to submit a review.", "warning")
-            return redirect(url_for("login"))
+# Socket.IO events
+@socketio.on("read_data")
+def read_json_data():
+    try:
+        # Hospital data
+        hospitals_response = requests.get(
+            "https://data.calgary.ca/resource/x34e-bcjz.geojson",
+            params={
+                "$where": "type='PHS Clinic' or type='Hospital'",
+                "$limit": 1000,
+                "$select": "name,type,address,comm_code,latitude,longitude"
+            },
+            timeout=10
+        )
+        hospitals_data = hospitals_response.json() if hospitals_response.status_code == 200 else {"features": []}
 
-        # Get form data
-        rating = request.form.get("rating")
-        comment = request.form.get("comment")
-        # Validate input
-        if not rating or not comment:
-            flash("Please provide both a rating and a comment.", "danger")
-            return redirect(url_for("book", isbn=isbn))
+        # Traffic data
+        traffic_response = requests.get(
+            "https://data.calgary.ca/resource/qr97-4jvx.geojson",
+            params={"$limit": 5000},
+            timeout=10
+        )
+        traffic_data = traffic_response.json() if traffic_response.status_code == 200 else {"features": []}
 
-        # Check if the user has already reviewed this book
+        emit("map_data", {
+            "traffics": traffic_data,
+            "hospitals_clinics": hospitals_data
+        })
+
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Data API error: {str(e)}")
+        emit("map_error", {"message": "Failed to load map data"})
+
+@app.route("/map/details/<code>")
+def hospital_clinic_details(code):
+    # Clear previous session data
+    session.pop("hospital_clinic_id_code", None)
+    
+    hospital = db.execute(
+        """SELECT h.*, 
+           COUNT(r.id) as review_count,
+           AVG(r.rate) as avg_rating
+           FROM hospitals_clinics h
+           LEFT JOIN reviews_geo r ON h.id = r.hospital_clinic_id
+           WHERE h.comm_code = :code
+           GROUP BY h.id""",
+        {"code": code}
+    ).fetchone()
+
+    if not hospital:
+        return render_template("error.html",
+                            message="Hospital/clinic not found",
+                            type_error="map")
+
+    # Store both ID and code in session
+    session["hospital_clinic_id_code"] = (hospital.id, code)
+    
+    reviews = db.execute(
+        """SELECT u.username, r.rate, r.comment, r.created_at
+        FROM reviews_geo r JOIN users_geo u ON r.user_id = u.id
+        WHERE r.hospital_clinic_id = :id
+        ORDER BY r.created_at DESC""",
+        {"id": hospital.id}
+    ).fetchall()
+
+    return render_template("hospital_clinic_details.html",
+                         hospital=hospital,
+                         reviews=reviews)
+
+@app.route("/map/details/submit-review", methods=["POST"])
+def submit_review():
+    if "user_id" not in session or "hospital_clinic_id_code" not in session:
+        return redirect(url_for("login"))
+
+    try:
+        rating = int(request.form.get("rating"))
+        comment = request.form.get("comment", "").strip()
+        hospital_id, code = session["hospital_clinic_id_code"]
+
+        if not rating or rating < 1 or rating > 5:
+            raise ValueError("Invalid rating")
+
+        # Check for existing review
         existing_review = db.execute(
-            text("SELECT * FROM reviews WHERE user_id = :user_id AND book_isbn = :isbn"),
-            {"user_id": session["user_id"], "isbn": isbn}
+            """SELECT 1 FROM reviews_geo 
+            WHERE user_id = :uid AND hospital_clinic_id = :hid""",
+            {"uid": session["user_id"], "hid": hospital_id}
         ).fetchone()
 
         if existing_review:
-            flash("You have already submitted a review for this book.", "danger")
-            return redirect(url_for("book", isbn=isbn))
+            raise ValueError("You already submitted a review")
 
-            # Save the review to the database
-        try:
-            db.execute(
-                text("""
-                    INSERT INTO reviews (user_id, book_isbn, rating, comment)
-                    VALUES (:user_id, :book_isbn, :rating, :comment)
-                """),
-                {"user_id": session["user_id"], "book_isbn": isbn, "rating": rating, "comment": comment}
-            )
-            db.commit()
-            flash("Your review has been submitted successfully!", "success")
-        except Exception as e:
-            db.rollback()
-            flash("An error occurred while submitting your review. Please try again.", "danger")
+        db.execute(
+            """INSERT INTO reviews_geo 
+            (rate, comment, user_id, hospital_clinic_id)
+            VALUES (:rate, :comment, :uid, :hid)""",
+            {
+                "rate": rating,
+                "comment": comment,
+                "uid": session["user_id"],
+                "hid": hospital_id
+            }
+        )
+        db.commit()
+        
+        return render_template("success_submit.html",
+                             submit_type="review",
+                             code=code)
 
-        return redirect(url_for("book", isbn=isbn))
+    except ValueError as e:
+        return render_template("error.html",
+                            message=str(e),
+                            type_error="hospital_detail",
+                            code=session["hospital_clinic_id_code"][1])
+    except Exception as e:
+        db.rollback()
+        app.logger.error(f"Review submission error: {str(e)}")
+        return render_template("error.html",
+                            message="An error occurred",
+                            type_error="hospital_detail",
+                            code=session["hospital_clinic_id_code"][1])
 
-
-    # Fetch book details from the database
-    book = db.execute(text("SELECT * FROM books WHERE isbn = :isbn"), {"isbn": isbn}).fetchone()
-    if not book:
-        flash("Book not found.", "danger")
-        return redirect(url_for("search"))
-
-    # Fetch Google Books API data
-    google_books_data = fetch_google_books_data(isbn)
-    average_rating = google_books_data.get("average_rating") if google_books_data else None
-    ratings_count = google_books_data.get("ratings_count") if google_books_data else None
-    description = google_books_data.get("description") if google_books_data else None
-
-    # Summarize description using Gemini API
-    summarized_description = summarize_description(description) if description else None
-
-    # Fetch reviews from the database
-    reviews = db.execute(
-        text("SELECT reviews.*, users.username FROM reviews JOIN users ON reviews.user_id = users.id WHERE book_isbn = :isbn"),
-        {"isbn": isbn}
-    ).fetchall()
-
-    return render_template(
-        "review.html",
-        book=book,
-        reviews=reviews,
-        average_rating=average_rating,
-        ratings_count=ratings_count,
-        description=description,
-        summarized_description=summarized_description,
-    )
-
-@app.route("/api/<isbn>", methods=["GET"])
-def api_book(isbn):
-    # Fetch book details from the database
-    book = db.execute(text("SELECT * FROM books WHERE isbn = :isbn"), {"isbn": isbn}).fetchone()
-    if not book:
-        return jsonify({"error": "Book not found"}), 404
-
-    # Fetch Google Books API data
-    google_books_data = fetch_google_books_data(isbn)
-    average_rating = google_books_data.get("average_rating") if google_books_data else None
-    ratings_count = google_books_data.get("ratings_count") if google_books_data else None
-    description = google_books_data.get("description") if google_books_data else None
-
-    # Summarize description using Gemini API
-    summarized_description = summarize_description(description) if description else None
-
-    # Prepare JSON response
-    response = {
-        "title": book.title,
-        "author": book.author,
-        "publishedDate": book.year,
-        "ISBN_10": book.isbn,  # Assuming ISBN_10 is stored in the database
-        "ISBN_13": None,  # You can fetch ISBN_13 from Google Books API if needed
-        "reviewCount": ratings_count,
-        "averageRating": average_rating,
-        "summarizedDescription": summarized_description,
-    }
-
-    return jsonify(response)
-
-# Run the application
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)

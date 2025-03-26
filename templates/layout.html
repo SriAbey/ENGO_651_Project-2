@@ -14,10 +14,10 @@
     <nav>
         <div class="nav-content">
             <div class="logo">
-                <a href="{{ url_for('home') }}">OptiRoute</a>
+                <a href="{{ url_for('index') }}">OptiRoute</a>
             </div>
             <ul class="nav-links">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
                 {% if session.get('user_id') %}
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
